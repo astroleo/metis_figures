@@ -16,64 +16,45 @@ atm_int = atm * area_ELT ## unit: ph/s/micron/arcsec2
 tel = skycalc["col8"] ## unit: ph/s/m^2/micron/arcsec2
 tel_int = tel * area_ELT ## unit: ph/s/micron/arcsec2
 
-window_emissivity = ascii.read("../data/TC_window_METIS.dat")
-window_radiance = window_emissivity["col3"].data * blackbody_lambda(window_emissivity["col1"].data*u.micron,282*u.K)
-f_ratio = 17.7
+### Emissivity of METIS entrance window
+T_window = 282 * u.K
+f_ratio = 17.7 ## ELT Nasmyth focus
 solid_angle = (1/f_ratio)**2 * u.sr
-plate_scale = 3.316 *u.mm/u.arcsec
-window_flux = window_radiance * solid_angle * plate_scale**2
-energy_per_photon = c.h*c.c/(window_emissivity["col1"].data*u.micron)
-window_flux_photon = (window_flux/energy_per_photon).to("1/(micron s arcsec**2)") ## unit: ph/s/micron/arcsec2
-window_flux_photon_interp = np.interp(wave,window_emissivity["col1"],window_flux_photon)
+plate_scale = 3.316 *u.mm/u.arcsec ## according to ELT ICD Instruments
 
-plt.plot(wave,atm_int,label="Sky")
-plt.plot(wave,tel_int,label="Telescope")
-plt.plot(wave,window_flux_photon_interp,label="Window")
-plt.plot(wave,atm_int+tel_int+window_flux_photon_interp,label="Total background")
-plt.xlim([3.0,4.2])
-plt.ylim([0,6e10])
-plt.legend()
-plt.title("L band")
+window_emissivity = ascii.read("../data/TC_window_METIS.dat")
+we_l = window_emissivity["col1"].data
+we_e = window_emissivity["col3"].data
+window_radiance = we_e * blackbody_lambda(we_l*u.micron, T_window)
+window_flux = (window_radiance * solid_angle * plate_scale**2).decompose()
+energy_per_photon = c.h*c.c/(we_l*u.micron)
+window_flux_photon = (window_flux/energy_per_photon).to("1/(micron s arcsec**2)")
+## interpolate to other wavelength scale
+window = np.interp(wave,we_l,window_flux_photon)
+
+plt.subplot(211)
+plt.plot(wave,atm_int,label="Sky",color="blue",linewidth=0.5)
+plt.plot(wave,tel_int,label="Telescope",color="green",linewidth=0.5)
+plt.plot(wave,window,label="Window",color="red",linewidth=0.5)
+plt.plot(wave,atm_int+tel_int+window,label="Total background",color="black",linewidth=1)
+plt.xlim([3.0,5.5])
+plt.title("L/M bands")
 plt.xlabel("Wavelength [micron]")
-plt.ylabel("Specific intensity [ph/s/micron/arcsec^2]")
-plt.savefig("L.png")
-plt.clf()
+plt.ylabel("[ph/s/micron/arcsec^2]")
+plt.yscale("log")
+plt.legend(prop={'size': 6})
 
-plt.plot(wave,atm_int,label="Sky")
-plt.plot(wave,tel_int,label="Telescope")
-plt.plot(wave,window_flux_photon_interp,label="Window")
-plt.plot(wave,atm_int+tel_int+window_flux_photon_interp,label="Total background")
-plt.xlim([4.4,5.5])
-plt.ylim([0,2e12])
-plt.legend()
-plt.title("M band")
-plt.xlabel("Wavelength [micron]")
-plt.ylabel("Specific intensity [ph/s/micron/arcsec^2]")
-plt.savefig("M.png")
-plt.clf()
-
-plt.plot(wave,atm_int,label="Sky")
-plt.plot(wave,tel_int,label="Telescope")
-plt.plot(wave,window_flux_photon_interp,label="Window")
-plt.plot(wave,atm_int+tel_int+window_flux_photon_interp,label="Total background")
+plt.subplot(212)
+plt.plot(wave,atm_int,label="Sky",color="blue",linewidth=0.5)
+plt.plot(wave,tel_int,label="Telescope",color="green",linewidth=0.5)
+plt.plot(wave,window,label="Window",color="red",linewidth=0.5)
+plt.plot(wave,atm_int+tel_int+window,label="Total background",color="black",linewidth=1)
 plt.xlim([7.5,13.5])
-plt.ylim([0,1e13])
-plt.legend()
 plt.title("N band")
 plt.xlabel("Wavelength [micron]")
-plt.ylabel("Specific intensity [ph/s/micron/arcsec^2]")
-plt.savefig("N.png")
-plt.clf()
+plt.ylabel("[ph/s/micron/arcsec^2]")
+plt.yscale("log")
 
-plt.plot(wave,atm_int,label="Sky")
-plt.plot(wave,tel_int,label="Telescope")
-plt.plot(wave,window_flux_photon_interp,label="Window")
-plt.plot(wave,atm_int+tel_int+window_flux_photon_interp,label="Total background")
-plt.xlim([15,20])
-plt.ylim([0,3e13])
-plt.legend()
-plt.title("Q band")
-plt.xlabel("Wavelength [micron]")
-plt.ylabel("Specific intensity [ph/s/micron/arcsec^2]")
-plt.savefig("Q.png")
+plt.tight_layout()
+plt.savefig("metis_background_components.pdf")
 plt.clf()
