@@ -1,0 +1,17 @@
+#filter_name sens_median
+Lp L 0.587
+short-L L 0.443
+PAH_3.3 L 1.733
+H2O-ice L 0.537
+IB_4.05 L 2.879
+Br_alpha L 5.714
+Mp M 4.477
+CO(1-0)_ice M 6.470
+N1 N 44.213
+N2 N 112.047
+N3 N 133.909
+PAH_8.6 N 69.650
+PAH_11.25 N 143.313
+Ne_II N 320.596
+S_IV N 159.457
+Q1 Q 5850.192
