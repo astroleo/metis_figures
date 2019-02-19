@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-def plot_filters_band(band_name,color):
+def plot_filters_band(band_name,color,showGeoSnap=False):
 	all_filters = ascii.read("../data/filter_sensitivity.txt")
 	filters = all_filters["col1"][all_filters["col2"]==band_name]
 	sensitivities = all_filters["col3"][all_filters["col2"]==band_name]
@@ -18,6 +18,18 @@ def plot_filters_band(band_name,color):
 		plt.text(center,sens-label_offset,filter_name,ha="center")
 	
 	return(ylim)
+
+def plot_filters_N_GeoSnap():
+	all_filters = ascii.read("../data/filter_sensitivity.txt")
+	filters = all_filters["col1"][all_filters["col2"]=="NGeo"]
+	sensitivities = all_filters["col3"][all_filters["col2"]=="NGeo"]
+	color="green"
+
+	for filter_name, sens in zip(filters,sensitivities):
+		edges = get_filter_edges(filter_name)
+		center = np.sum(edges)/2
+		plt.plot(center,sens,color=color,marker="D")
+		plt.plot(edges,[sens,sens],color=color)
 
 def get_filter_edges(filter_name):
 	filter_curve = "../data/filter_curves/TC_filter_"+filter_name+".dat"
@@ -40,15 +52,20 @@ aerosol = skycalc["col5"]
 trans_total = mol_absorption * ozone * rayleigh * aerosol
 
 
-def plot_trans_atmo_filters(band_name,band_pass):
+def plot_trans_atmo_filters(band_name,band_pass,showGeoSnap=False):
 	fig, ax1 = plt.subplots()
 	axcolor = "blue"
 	ax1.set_xlim(band_pass)
 	ax1.set_xlabel('Wavelength [micron]')
-	ylim = plot_filters_band(band_name,axcolor)
+	ylim = plot_filters_band(band_name,axcolor,showGeoSnap=False)
 	ax1.set_ylim(ylim)
 	ax1.set_ylabel(r'Point source sensitivity [$\mu{}$Jy/5$\sigma{}$/1h]', color=axcolor)
 	ax1.tick_params('y', colors=axcolor)
+	if showGeoSnap & (band_name=="N"):
+		plot_filters_N_GeoSnap()
+		plt.plot(2,1,'b',marker="o",label="Aquarius")
+		plt.plot(3,0,'g',marker="D",label="GeoSnap")
+		plt.legend()
 
 	ax2 = ax1.twinx()
 	axcolor="grey"
@@ -70,5 +87,5 @@ Qband = [16,20]
 
 plot_trans_atmo_filters("L",Lband)
 plot_trans_atmo_filters("M",Mband)
-plot_trans_atmo_filters("N",Nband)
+plot_trans_atmo_filters("N",Nband,showGeoSnap=True)
 plot_trans_atmo_filters("Q",Qband)

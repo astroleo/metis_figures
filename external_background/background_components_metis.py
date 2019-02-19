@@ -14,7 +14,8 @@ area_ELT = np.pi*((38)**2-(11.1)**2)/4 ## unit: m^2
 atm_int = atm * area_ELT ## unit: ph/s/micron/arcsec2
 
 tel = skycalc["col8"] ## unit: ph/s/m^2/micron/arcsec2
-tel_int = tel * area_ELT ## unit: ph/s/micron/arcsec2
+spider_contrib = 0.1 ## fraction of flux that the spiders contribute to the total telescope background
+tel_int = (1+spider_contrib) * tel * area_ELT ## unit: ph/s/micron/arcsec2
 
 ### Emissivity of METIS entrance window
 T_window = 282 * u.K
@@ -32,12 +33,17 @@ window_flux_photon = (window_flux/energy_per_photon).to("1/(micron s arcsec**2)"
 ## interpolate to other wavelength scale
 window = np.interp(wave,we_l,window_flux_photon)
 
+LM = [3.0,5.5]
+NQ = [7.5,20.0]
+
+LM_ix = np.where((wave>LM[0]) & (wave<LM[1]))
+NQ_ix = np.where((wave>NQ[0]) & (wave<NQ[1]))
+
 plt.subplot(211)
-plt.plot(wave,atm_int,label="Sky",color="blue",linewidth=0.5)
-plt.plot(wave,tel_int,label="Telescope",color="green",linewidth=0.5)
-plt.plot(wave,window,label="Window",color="red",linewidth=0.5)
-plt.plot(wave,atm_int+tel_int+window,label="Total background",color="black",linewidth=1)
-plt.xlim([3.0,5.5])
+plt.plot(wave[LM_ix],atm_int[LM_ix],label="Sky",color="blue",linewidth=0.5)
+plt.plot(wave[LM_ix],tel_int[LM_ix],label="Telescope + spiders",color="green",linewidth=0.5)
+plt.plot(wave[LM_ix],window[LM_ix],label="Window",color="red",linewidth=0.5)
+plt.plot(wave[LM_ix],atm_int[LM_ix]+tel_int[LM_ix]+window[LM_ix],label="Total background",color="black",linewidth=1)
 plt.title("L/M bands")
 plt.xlabel("Wavelength [micron]")
 plt.ylabel("[ph/s/micron/arcsec^2]")
@@ -45,11 +51,10 @@ plt.yscale("log")
 plt.legend(prop={'size': 6})
 
 plt.subplot(212)
-plt.plot(wave,atm_int,label="Sky",color="blue",linewidth=0.5)
-plt.plot(wave,tel_int,label="Telescope",color="green",linewidth=0.5)
-plt.plot(wave,window,label="Window",color="red",linewidth=0.5)
-plt.plot(wave,atm_int+tel_int+window,label="Total background",color="black",linewidth=1)
-plt.xlim([7.5,13.5])
+plt.plot(wave[NQ_ix],atm_int[NQ_ix],label="Sky",color="blue",linewidth=0.5)
+plt.plot(wave[NQ_ix],tel_int[NQ_ix],label="Telescope + spiders",color="green",linewidth=0.5)
+plt.plot(wave[NQ_ix],window[NQ_ix],label="Window",color="red",linewidth=0.5)
+plt.plot(wave[NQ_ix],atm_int[NQ_ix]+tel_int[NQ_ix]+window[NQ_ix],label="Total background",color="black",linewidth=1)
 plt.title("N band")
 plt.xlabel("Wavelength [micron]")
 plt.ylabel("[ph/s/micron/arcsec^2]")
